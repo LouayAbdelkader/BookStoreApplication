@@ -1,17 +1,17 @@
-# Use official Python runtime as a parent image
+# Use the official Python image as a base
 FROM python:3.9-slim
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+# Copy the application code
 COPY . /app
 
-# Install the necessary dependencies
-RUN pip install flask pymongo
+# Install required Python dependencies
+RUN pip install --no-cache-dir Flask==2.2.5 Flask-Cors==3.0.10 pymongo==4.4.1
 
-# Make port 5000 available to the world outside this container
+# Expose the port the app runs on
 EXPOSE 5000
 
-# Run app.py when the container launches
-CMD ["python", "auth_service.py"]
+# Run the application
+CMD ["python", "app.py"]
