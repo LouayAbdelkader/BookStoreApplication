@@ -6,7 +6,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Connect to local MongoDB
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient('mongodb://mongo-service:27017/')
 db = client['bookstore_db']
 books_collection = db['books']
 
