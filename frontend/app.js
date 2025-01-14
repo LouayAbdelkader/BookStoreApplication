@@ -1,17 +1,16 @@
 let currentUser = null;
 
 // Backend API URLs
-const AUTH_API = 'http://localhost:5000/api/auth';
-const PRODUCT_API = 'http://localhost:5001/api/products';
-const CART_API = 'http://localhost:5002/api/cart';
-const ORDER_API = 'http://localhost:5003/api/orders';
+const AUTH_API = 'http://localhost:5000';
+const PRODUCT_API = 'http://localhost:5001';
+const ORDER_API = 'http://localhost:5002';
 
 // Register a new user
 async function register() {
     const username = document.getElementById('signup-username').value;
     const password = document.getElementById('signup-password').value;
 
-    const response = await fetch(`${AUTH_API}/signup`, {
+    const response = await fetch(`${AUTH_API}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -38,72 +37,108 @@ async function login() {
 
     if (response.ok) {
         const data = await response.json();
-        currentUser = { username, token: data.token };
+        currentUser = { username, userId: data.userId }; // Store userId only
         alert(`Welcome back, ${username}!`);
-        loadMainSection();
+        loadMainSection(username);  // Pass username to loadMainSection
     } else {
         alert('Invalid username or password');
     }
 }
 
+
 // Load the main section
-async function loadMainSection() {
+async function loadMainSection(username) {
     document.getElementById('login-signup-form').style.display = 'none';
     document.getElementById('main-section').style.display = 'block';
+
+    // Display logged-in username
+    document.getElementById('uname').textContent = `${username}`;
+
     await loadProducts();
-    await loadCart();
     await loadOrders();
 }
 
 // Load products
 async function loadProducts() {
-    const response = await fetch(`${PRODUCT_API}`);
+    const response = await fetch(`${PRODUCT_API}/books`); // Correct endpoint
     const products = await response.json();
     const productList = document.getElementById('product-list');
-    productList.innerHTML = '';
+    productList.innerHTML = ''; // Clear the current list before adding new items
+
     products.forEach(product => {
         const li = document.createElement('li');
         li.classList.add('list-group-item');
-        li.textContent = `${product.title} - $${product.price}`;
-        li.onclick = () => addToCart(product.id);
+
+        // Creating elements for book details
+        const title = document.createElement('h5');
+        title.textContent = `${product.title} - $${product.price}`;
+        li.appendChild(title);
+
+        const author = document.createElement('p');
+        author.textContent = `Author: ${product.author}`;
+        li.appendChild(author);
+
+        const description = document.createElement('p');
+        description.textContent = `Description: ${product.description}`;
+        li.appendChild(description);
+
+        // Adding an "Add to Order" button
+        const addButton = document.createElement('button');
+        addButton.classList.add('btn', 'btn-primary', 'btn-sm', 'ml-3');
+        addButton.textContent = 'Add to Order';
+        addButton.onclick = () => addToOrder(product._id); // Call addToOrder with product ids
+        li.appendChild(addButton);
+
         productList.appendChild(li);
     });
 }
 
-// Load cart
-async function loadCart() {
-    const response = await fetch(`${CART_API}`, {
-        headers: { Authorization: `Bearer ${currentUser.token}` },
-    });
-    const cartItems = await response.json();
-    const cartList = document.getElementById('cart-list');
-    cartList.innerHTML = '';
-    cartItems.forEach(item => {
-        const li = document.createElement('li');
-        li.classList.add('list-group-item');
-        li.textContent = `${item.title} - $${item.price}`;
-        cartList.appendChild(li);
-    });
+
+// Get the active order for the current user
+async function getActiveOrder() {
+    const response = await fetch(`${ORDER_API}/user/orders?userId=${currentUser.userId}`);
+    if (response.ok) {
+        const orders = await response.json();
+        return orders.find(order => !order.completed); // Find the active, incomplete order
+    }
+    return null; // No active orders found
 }
 
-// Add to cart
-async function addToCart(productId) {
-    await fetch(`${CART_API}/add`, {
+// Add product to order or create a new order if none exists
+async function addToOrder(productId) {
+    if (!currentUser) {
+        alert("You need to log in to add items to your order.");
+        return;
+    }
+
+    const data = {
+        userId: currentUser.userId,  // Pass userId to associate with the order
+        productId: productId
+    };
+
+    const response = await fetch(`${ORDER_API}/orders`, {
         method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json', 
-            Authorization: `Bearer ${currentUser.token}` 
-        },
-        body: JSON.stringify({ productId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
     });
-    alert('Product added to cart!');
-    loadCart();
+
+    if (response.ok) {
+        alert('Product added to your order!');
+        loadOrders();  // Reload the orders after adding a product
+    } else {
+        alert('Failed to add product to order.');
+    }
 }
 
 // Load orders
 async function loadOrders() {
-    const response = await fetch(`${ORDER_API}`, {
-        headers: { Authorization: `Bearer ${currentUser.token}` },
+    if (!currentUser) {
+        alert("You need to log in to view your orders.");
+        return;
+    }
+
+    const response = await fetch(`${ORDER_API}/orders?userId=${currentUser.userId}`, {
+        headers: { 'Content-Type': 'application/json' },
     });
     const orders = await response.json();
     const orderList = document.getElementById('order-list');
@@ -111,20 +146,30 @@ async function loadOrders() {
     orders.forEach(order => {
         const li = document.createElement('li');
         li.classList.add('list-group-item');
-        li.textContent = `Order #${order.id} - Total: $${order.total}`;
+        li.textContent = `Order #${order._id} - Total: $${order.total || 'TBD'}`;
         orderList.appendChild(li);
     });
 }
 
+
 // Checkout
 async function checkout() {
-    await fetch(`${ORDER_API}/checkout`, {
+    if (!currentUser) {
+        alert("You need to log in to checkout.");
+        return;
+    }
+
+    const response = await fetch(`${ORDER_API}/checkout`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${currentUser.token}` },
+        headers: { 'Content-Type': 'application/json' },
     });
-    alert('Checkout successful!');
-    loadCart();
-    loadOrders();
+
+    if (response.ok) {
+        alert('Checkout successful!');
+        loadOrders();  // Reload orders after checkout
+    } else {
+        alert('Checkout failed.');
+    }
 }
 
 // Log out

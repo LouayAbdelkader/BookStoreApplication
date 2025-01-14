@@ -6,13 +6,19 @@
     <title>Book Store</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
 </head>
 <body>
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-6 mx-auto">
                 <div id="login-signup-form">
-                    <!-- Signup Form -->
+                    <h2 class="text-center">
+                        <i class="bi bi-book-fill"></i> Welcome to Lou' Book Store!
+                    </h2><br><br>
+                                        <!-- Signup Form -->
                     <div id="signup-form" class="card">
                         <div class="card-body">
                             <h4 class="card-title text-center">Sign Up</h4>
@@ -55,23 +61,21 @@
 
                 <!-- Book Store Main Section -->
                 <div id="main-section" style="display: none;">
-                    <h2 class="text-center">Welcome to the Book Store</h2>
+                    <h2 class="text-center">Welcome <span id="uname"></span> to the Book Store</h2>
 
                     <!-- Product List -->
                     <div id="products-section">
                         <h3>Products</h3>
                         <ul id="product-list" class="list-group">
                             <!-- Product items will be populated here -->
+                            <!-- Example product -->
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Book Title</span>
+                                <button class="btn btn-success btn-sm" onclick="addToOrder('Book Title')">
+                                    <i class="bi bi-cart-plus"></i> Add to Order
+                                </button>
+                            </li>
                         </ul>
-                    </div>
-
-                    <!-- Cart Section -->
-                    <div id="cart-section" class="mt-4">
-                        <h3>Shopping Cart</h3>
-                        <ul id="cart-list" class="list-group">
-                            <!-- Cart items will be populated here -->
-                        </ul>
-                        <button type="button" class="btn btn-success btn-block mt-3" onclick="checkout()">Checkout</button>
                     </div>
 
                     <!-- Order Section -->
@@ -80,6 +84,7 @@
                         <ul id="order-list" class="list-group">
                             <!-- Orders will be populated here -->
                         </ul>
+                        <button type="button" class="btn btn-success btn-block mt-3" onclick="checkout()">Checkout</button>
                     </div>
 
                     <!-- Logout Button -->

@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Connect to local MongoDB
 client = MongoClient('mongodb://localhost:27017/')
-db = client['auth_db']
+db = client['bookstore_db']
 users_collection = db['users']
 
 @app.route('/login', methods=['POST'])
